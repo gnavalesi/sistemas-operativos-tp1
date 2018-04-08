@@ -27,10 +27,8 @@ public:
 	}
 
 	void push_front(const T& val) {
-		Nodo *head = _head.load();
-		auto *newHead = new Nodo(val);
-		newHead->_next = head;
-		_head.store(newHead);
+		auto newHead = new Nodo(val);
+		newHead->_next = _head.exchange(newHead);
 	}
 
 	T& front() const {
