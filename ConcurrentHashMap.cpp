@@ -115,7 +115,7 @@ item ConcurrentHashMap::maximum(unsigned int nt) {
 
 // Public static member functions
 
-ConcurrentHashMap ConcurrentHashMap::count_words(string &arch) {
+ConcurrentHashMap ConcurrentHashMap::count_words(string arch) {
     ConcurrentHashMap map;
 
     count_words(arch, &map);
