@@ -37,13 +37,15 @@ private:
         mutex archs_iterator_mutex;
     };
 
+    static unsigned int hash_key(string *key);
+    static list<string> words(string &arch);
     static void *maximum_thread_function(void *thread_args);
     static void *count_words_thread_function(void *thread_args);
     static void *count_words_single_file_thread_function(void *thread_args);
     static void count_words(string arch, ConcurrentHashMap *map);
 
 public:
-    vector<bucket*> tabla;
+    bucket* tabla[26];
 
     ConcurrentHashMap();
     ~ConcurrentHashMap();
@@ -51,7 +53,7 @@ public:
     void addAndInc(string key);
     bool member(string key);
     item maximum(unsigned int nt);
-    static ConcurrentHashMap count_words(string arch);
+    static ConcurrentHashMap count_words(string &arch);
     static ConcurrentHashMap count_words(list <string> archs);
     static ConcurrentHashMap count_words(unsigned int n, list <string> archs);
     static item maximum(unsigned int p_archivos, unsigned int p_maximos, list <string> archs);

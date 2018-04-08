@@ -1,43 +1,13 @@
 #include "ConcurrentHashMap.hpp"
 
-#include <atomic>
 #include <fstream>
 #include <iostream>
-#include <iterator>
-#include <pthread.h>
-#include <sstream>
-#include <streambuf>
-#include <utility>
-#include <vector>
 
 using namespace std;
-
-// Helper functions
-unsigned int hash_key(string *key) {
-    return (unsigned int) key->at(0) - 97;
-}
-
-list<string> words(string &arch) {
-    list<string> res;
-    string line;
-
-    ifstream ifs(arch);
-    if(!ifs) {
-        cerr << "ERROR: Cannot open " << arch << endl;
-        exit(1);
-    }
-
-    while(getline(ifs, line)) {
-        res.push_back(line);
-    }
-
-    return res;
-}
 
 // Public member functions
 
 ConcurrentHashMap::ConcurrentHashMap() {
-    tabla = vector<bucket*>(26, nullptr);
     for (int i = 0; i < 26; i++) {
         tabla[i] = new bucket();
         tabla_mutex[i] = new mutex;
@@ -60,7 +30,7 @@ ConcurrentHashMap &ConcurrentHashMap::operator=(const ConcurrentHashMap &obj) {
 
         delete tabla[i];
         tabla[i] = new bucket();
-        for(iterador = obj.tabla[i]->CrearIt(); iterador.HaySiguiente(); iterador.Avanzar()) {
+        for (iterador = obj.tabla[i]->CrearIt(); iterador.HaySiguiente(); iterador.Avanzar()) {
             tabla[i]->push_front(iterador.Siguiente());
         }
 
@@ -76,9 +46,9 @@ void ConcurrentHashMap::addAndInc(string key) {
 
     tabla_mutex[index]->lock();
 
-    for(it = tabla[index]->CrearIt(); it.HaySiguiente(); it.Avanzar()) {
+    for (it = tabla[index]->CrearIt(); it.HaySiguiente(); it.Avanzar()) {
         encontrado = it.Siguiente().first == key;
-        if(encontrado) {
+        if (encontrado) {
             it.Siguiente().second++;
             break;
         }
@@ -95,14 +65,10 @@ bool ConcurrentHashMap::member(string key) {
 
     unsigned int index = hash_key(&key);
 
-    tabla_mutex[index]->lock();
-
-    for(it = tabla[index]->CrearIt(); it.HaySiguiente(); it.Avanzar()) {
+    for (it = tabla[index]->CrearIt(); it.HaySiguiente(); it.Avanzar()) {
         encontrado = it.Siguiente().first == key;
-        if(encontrado) break;
+        if (encontrado) break;
     }
-
-    tabla_mutex[index]->unlock();
 
     return encontrado;
 }
@@ -149,7 +115,7 @@ item ConcurrentHashMap::maximum(unsigned int nt) {
 
 // Public static member functions
 
-ConcurrentHashMap ConcurrentHashMap::count_words(string arch) {
+ConcurrentHashMap ConcurrentHashMap::count_words(string &arch) {
     ConcurrentHashMap map;
 
     count_words(arch, &map);
@@ -158,7 +124,7 @@ ConcurrentHashMap ConcurrentHashMap::count_words(string arch) {
 }
 
 ConcurrentHashMap ConcurrentHashMap::count_words(list<string> archs) {
-    ConcurrentHashMap *map = new ConcurrentHashMap();
+    auto map = new ConcurrentHashMap();
     int rc;
     int i;
     pthread_t threads[archs.size()];
@@ -173,7 +139,7 @@ ConcurrentHashMap ConcurrentHashMap::count_words(list<string> archs) {
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
     for (i = 0; i < archs.size(); i++) {
-        rc = pthread_create(&threads[i], NULL, count_words_single_file_thread_function, &args);
+        rc = pthread_create(&threads[i], nullptr, count_words_single_file_thread_function, &args);
 
         if (rc) {
             cerr << "Error:unable to create thread," << rc << endl;
@@ -211,7 +177,7 @@ ConcurrentHashMap ConcurrentHashMap::count_words(unsigned int n, list<string> ar
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
     for (i = 0; i < n; i++) {
-        rc = pthread_create(&threads[i], NULL, count_words_thread_function, &args);
+        rc = pthread_create(&threads[i], nullptr, count_words_thread_function, &args);
 
         if (rc) {
             cerr << "Error:unable to create thread," << rc << endl;
@@ -251,8 +217,8 @@ item ConcurrentHashMap::maximum(unsigned int p_archivos, unsigned int p_maximos,
     archivos_threads_args.archs_iterator = archs.begin();
     archivos_threads_args.archs_iterator_end = archs.end();
 
-    for(i = 0; i < archs.size(); i++) {
-        rc = pthread_create(&archivos_threads[i], NULL, count_words_thread_function, &archivos_threads_args);
+    for (i = 0; i < archs.size(); i++) {
+        rc = pthread_create(&archivos_threads[i], nullptr, count_words_thread_function, &archivos_threads_args);
 
         if (rc) {
             cerr << "Error:unable to create thread," << rc << endl;
@@ -275,7 +241,26 @@ item ConcurrentHashMap::maximum(unsigned int p_archivos, unsigned int p_maximos,
 
 // Private member functions
 
+unsigned int ConcurrentHashMap::hash_key(string *key) {
+    return (unsigned int) key->at(0) - 97;
+}
 
+list<string> ConcurrentHashMap::words(string &arch) {
+    list<string> res;
+    string line;
+
+    ifstream ifs(arch);
+    if (!ifs) {
+        cerr << "ERROR: Cannot open " << arch << endl;
+        exit(1);
+    }
+
+    while (getline(ifs, line)) {
+        res.push_back(line);
+    }
+
+    return res;
+}
 
 void *ConcurrentHashMap::maximum_thread_function(void *thread_args) {
     struct maximum_thread_args *args;
@@ -284,7 +269,7 @@ void *ConcurrentHashMap::maximum_thread_function(void *thread_args) {
 
     args = (struct maximum_thread_args *) thread_args;
 
-    for(index = args->index++; index < 26; index = args->index++) {
+    for (index = args->index++; index < 26; index = args->index++) {
         args->map->tabla_mutex[index]->lock();
 
         bucket::Iterador iterador = args->map->tabla[index]->CrearIt();
@@ -345,7 +330,7 @@ void ConcurrentHashMap::count_words(string arch, ConcurrentHashMap *map) {
     list<string> palabras = words(arch);
     list<string>::iterator it;
 
-    for(it = palabras.begin(); it != palabras.end(); it++) {
+    for (it = palabras.begin(); it != palabras.end(); it++) {
         map->addAndInc(*it);
     }
 }
