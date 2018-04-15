@@ -255,7 +255,7 @@ list<string> ConcurrentHashMap::words(string &arch) {
         exit(1);
     }
 
-    while (getline(ifs, line)) {
+    while (ifs >> line) {
         res.push_back(line);
     }
 
