@@ -76,14 +76,9 @@ bool ConcurrentHashMap::member(string key) {
 item ConcurrentHashMap::maximum(unsigned int nt) {
     int rc;
     int i;
-    pthread_attr_t attr;
     pthread_t threads[nt];
     void *status;
     maximum_thread_args args;
-
-    // Preparo los atributos de los threads
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
     // Preparo los argumentos de la funcion maximum_thread_function
     args.map = this;
@@ -101,7 +96,6 @@ item ConcurrentHashMap::maximum(unsigned int nt) {
     }
 
     // Espero por cada uno de los threads
-    pthread_attr_destroy(&attr);
     for (i = 0; i < nt; i++) {
         rc = pthread_join(threads[i], &status);
         if (rc) {
@@ -128,15 +122,11 @@ ConcurrentHashMap ConcurrentHashMap::count_words(list<string> archs) {
     int rc;
     int i;
     pthread_t threads[archs.size()];
-    pthread_attr_t attr;
     void *status;
     count_words_single_file_thread_args args;
 
     args.map = map;
     args.archs_iterator = archs.begin();
-
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
     for (i = 0; i < archs.size(); i++) {
         rc = pthread_create(&threads[i], nullptr, count_words_single_file_thread_function, &args);
@@ -147,7 +137,6 @@ ConcurrentHashMap ConcurrentHashMap::count_words(list<string> archs) {
         }
     }
 
-    pthread_attr_destroy(&attr);
     for (i = 0; i < archs.size(); i++) {
         rc = pthread_join(threads[i], &status);
         if (rc) {
@@ -164,7 +153,6 @@ ConcurrentHashMap ConcurrentHashMap::count_words(unsigned int n, list<string> ar
     int rc;
     int i;
     pthread_t threads[n];
-    pthread_attr_t attr;
     void *status;
 
     count_words_thread_args args;
@@ -172,9 +160,6 @@ ConcurrentHashMap ConcurrentHashMap::count_words(unsigned int n, list<string> ar
     args.map = map;
     args.archs_iterator = archs.begin();
     args.archs_iterator_end = archs.end();
-
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
     for (i = 0; i < n; i++) {
         rc = pthread_create(&threads[i], nullptr, count_words_thread_function, &args);
@@ -185,7 +170,6 @@ ConcurrentHashMap ConcurrentHashMap::count_words(unsigned int n, list<string> ar
         }
     }
 
-    pthread_attr_destroy(&attr);
     for (i = 0; i < n; i++) {
         rc = pthread_join(threads[i], &status);
         if (rc) {
@@ -204,14 +188,9 @@ item ConcurrentHashMap::maximum(unsigned int p_archivos, unsigned int p_maximos,
     pthread_t archivos_threads[p_archivos];
     count_words_thread_args archivos_threads_args;
 
-    pthread_attr_t attr;
     void *status;
 
     auto map = new ConcurrentHashMap;
-
-    // Preparo los atributos de los threads
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
     archivos_threads_args.map = map;
     archivos_threads_args.archs_iterator = archs.begin();
