@@ -177,13 +177,13 @@ item ConcurrentHashMap::maximum(unsigned int p_archivos, unsigned int p_maximos,
     pthread_t archivos_threads[p_archivos];
     count_words_thread_args archivos_threads_args;
 
-    auto map = new ConcurrentHashMap;
+    auto map = new ConcurrentHashMap();
 
     archivos_threads_args.map = map;
     archivos_threads_args.archs_iterator = archs.begin();
     archivos_threads_args.archs_iterator_end = archs.end();
 
-    for (i = 0; i < archs.size(); i++) {
+    for (i = 0; i < p_archivos; i++) {
         rc = pthread_create(&archivos_threads[i], nullptr, count_words_thread_function, &archivos_threads_args);
 
         if (rc) {
@@ -192,7 +192,7 @@ item ConcurrentHashMap::maximum(unsigned int p_archivos, unsigned int p_maximos,
         }
     }
 
-    for (i = 0; i < archs.size(); i++) {
+    for (i = 0; i < p_archivos; i++) {
         rc = pthread_join(archivos_threads[i], nullptr);
         if (rc) {
             cout << "Error:unable to join," << rc << endl;
