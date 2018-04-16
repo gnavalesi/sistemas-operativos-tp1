@@ -7,3 +7,9 @@ test-3
 test-4
 test-5
 *.o
+informe/*.pdf
+informe/*.aux
+informe/*.log
+informe/*.out
+informe/*.synctex.gz
+informe/_minted-main
