@@ -39,38 +39,30 @@ ConcurrentHashMap &ConcurrentHashMap::operator=(const ConcurrentHashMap &obj) {
 }
 
 void ConcurrentHashMap::addAndInc(string key) {
-    bool encontrado = false;
     bucket::Iterador it;
 
     unsigned int index = hash_key(&key);
 
     tabla_mutex[index]->lock();
 
-    for (it = tabla[index]->CrearIt(); it.HaySiguiente(); it.Avanzar()) {
-        encontrado = it.Siguiente().first == key;
-        if (encontrado) {
-            it.Siguiente().second++;
-            break;
-        }
-    }
+    it = tabla[index]->CrearIt();
+    while (it.HaySiguiente() && it.Siguiente().first != key) it.Avanzar();
 
-    if (!encontrado) tabla[index]->push_front(item(key.data(), 1));
+    if (it.HaySiguiente()) it.Siguiente().second++;
+    else tabla[index]->push_front(item(key.data(), 1));
 
     tabla_mutex[index]->unlock();
 }
 
 bool ConcurrentHashMap::member(string key) {
-    bool encontrado = false;
     bucket::Iterador it;
 
     unsigned int index = hash_key(&key);
 
-    for (it = tabla[index]->CrearIt(); it.HaySiguiente(); it.Avanzar()) {
-        encontrado = it.Siguiente().first == key;
-        if (encontrado) break;
-    }
+    it = tabla[index]->CrearIt();
+    while (it.HaySiguiente() && it.Siguiente().first != key) it.Avanzar();
 
-    return encontrado;
+    return it.HaySiguiente();
 }
 
 item ConcurrentHashMap::maximum(unsigned int nt) {
