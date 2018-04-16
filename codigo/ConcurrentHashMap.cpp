@@ -250,12 +250,8 @@ void *ConcurrentHashMap::maximum_thread_function(void *thread_args) {
 
     if (maximum != item("", 0)) {
 	    args->general_maximum_mutex.lock();
-
-	    if (maximum.second > args->general_maximum.second) {
-	        args->general_maximum.first = maximum.first;
-	        args->general_maximum.second = maximum.second;
-	    }
-
+	    if (maximum.second > args->general_maximum.second)
+            args->general_maximum = maximum;
 	    args->general_maximum_mutex.unlock();
 	}
 
