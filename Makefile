@@ -3,7 +3,7 @@
 .SUFFIXES: .o .cpp
 
 CXX = g++
-CXXFLAGS = -std=c++11
+CXXFLAGS = -std=c++11 -Wall
 LDLIBS = -lpthread
 
 .cpp.o:
@@ -27,7 +27,7 @@ test-1-run: test-1
 
 test-2: $(OBJ) test-2.cpp
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test-2.cpp $(OBJ) $(LDLIBS)
-	
+
 test-2-run: test-2
 	awk -f corpus.awk corpus | sort >corpus-post
 	./test-2 | sort | diff -u - corpus-post
