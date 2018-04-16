@@ -245,12 +245,16 @@ void *ConcurrentHashMap::maximum_thread_function(void *thread_args) {
         args->map->tabla_mutex[index]->unlock();
     }
 
-    args->general_maximum_mutex.lock();
-    if (maximum.second > args->general_maximum.second) {
-        args->general_maximum.first = maximum.first;
-        args->general_maximum.second = maximum.second;
-    }
-    args->general_maximum_mutex.unlock();
+    if (maximum != item("", 0)) {
+	    args->general_maximum_mutex.lock();
+
+	    if (maximum.second > args->general_maximum.second) {
+	        args->general_maximum.first = maximum.first;
+	        args->general_maximum.second = maximum.second;
+	    }
+
+	    args->general_maximum_mutex.unlock();
+	}
 }
 
 void *ConcurrentHashMap::count_words_thread_function(void *thread_args) {
