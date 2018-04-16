@@ -259,24 +259,21 @@ void *ConcurrentHashMap::maximum_thread_function(void *thread_args) {
 
 void *ConcurrentHashMap::count_words_thread_function(void *thread_args) {
     string arch;
-    bool is_over;
     struct count_words_thread_args *args;
 
     args = (struct count_words_thread_args *) thread_args;
 
-    while (true) {
+    bool not_over = true;
+    while (not_over) {
         args->archs_iterator_mutex.lock();
-        if (!(is_over = (args->archs_iterator == args->archs_iterator_end))) {
+        not_over = args->archs_iterator != args->archs_iterator_end;
+        if (not_over) {
             arch = *args->archs_iterator;
             args->archs_iterator++;
         }
-
         args->archs_iterator_mutex.unlock();
-        if (!is_over) {
-            count_words(arch, args->map);
-        } else {
-            break;
-        }
+
+        if (not_over) count_words(arch, args->map);
     }
 }
 
