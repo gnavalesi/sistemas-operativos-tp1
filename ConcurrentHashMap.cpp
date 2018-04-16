@@ -238,10 +238,8 @@ void *ConcurrentHashMap::maximum_thread_function(void *thread_args) {
     for (index = args->index++; index < 26; index = args->index++) {
         args->map->tabla_mutex[index]->lock();
 
-        bucket::Iterador iterador = args->map->tabla[index]->CrearIt();
-        while (iterador.HaySiguiente()) {
-            if (iterador.Siguiente().second > maximum.second) maximum = iterador.Siguiente();
-            iterador.Avanzar();
+        for (auto it = args->map->tabla[index]->CrearIt(); it.HaySiguiente(); it.Avanzar()) {
+        	if (it.Siguiente().second > maximum.second) maximum = it.Siguiente();
         }
 
         args->map->tabla_mutex[index]->unlock();
