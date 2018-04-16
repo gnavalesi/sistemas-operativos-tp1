@@ -23,6 +23,8 @@ void *count_words(void* thr_args) {
         args->h->addAndInc(*it);
         assert(args->h->member(*it));
     }
+
+    return nullptr;
 }
 
 int main(int argc, char **argv) {

@@ -36,6 +36,8 @@ ConcurrentHashMap &ConcurrentHashMap::operator=(const ConcurrentHashMap &obj) {
 
         tabla_mutex[i]->unlock();
     }
+
+    return *this;
 }
 
 void ConcurrentHashMap::addAndInc(string key) {
@@ -67,7 +69,7 @@ bool ConcurrentHashMap::member(string key) {
 
 item ConcurrentHashMap::maximum(unsigned int nt) {
     int rc;
-    int i;
+    unsigned int i;
     pthread_t threads[nt];
     maximum_thread_args args;
 
@@ -111,7 +113,7 @@ ConcurrentHashMap ConcurrentHashMap::count_words(string arch) {
 ConcurrentHashMap ConcurrentHashMap::count_words(list<string> archs) {
     auto map = new ConcurrentHashMap();
     int rc;
-    int i;
+    unsigned int i;
     pthread_t threads[archs.size()];
     count_words_single_file_thread_args args;
 
@@ -141,7 +143,7 @@ ConcurrentHashMap ConcurrentHashMap::count_words(list<string> archs) {
 ConcurrentHashMap ConcurrentHashMap::count_words(unsigned int n, list<string> archs) {
     auto map = new ConcurrentHashMap();
     int rc;
-    int i;
+    unsigned int i;
     pthread_t threads[n];
 
     count_words_thread_args args;
@@ -171,7 +173,8 @@ ConcurrentHashMap ConcurrentHashMap::count_words(unsigned int n, list<string> ar
 }
 
 item ConcurrentHashMap::maximum(unsigned int p_archivos, unsigned int p_maximos, list<string> archs) {
-    int rc, i;
+    int rc;
+    unsigned int i;
     list<string>::iterator it;
 
     pthread_t archivos_threads[p_archivos];
@@ -255,6 +258,8 @@ void *ConcurrentHashMap::maximum_thread_function(void *thread_args) {
 
 	    args->general_maximum_mutex.unlock();
 	}
+
+	return nullptr;
 }
 
 void *ConcurrentHashMap::count_words_thread_function(void *thread_args) {
@@ -275,6 +280,8 @@ void *ConcurrentHashMap::count_words_thread_function(void *thread_args) {
 
         if (not_over) count_words(arch, args->map);
     }
+
+	return nullptr;
 }
 
 void *ConcurrentHashMap::count_words_single_file_thread_function(void *thread_args) {
@@ -289,6 +296,8 @@ void *ConcurrentHashMap::count_words_single_file_thread_function(void *thread_ar
     args->archs_iterator_mutex.unlock();
 
     count_words(arch, args->map);
+
+	return nullptr;
 }
 
 void ConcurrentHashMap::count_words(string arch, ConcurrentHashMap *map) {
