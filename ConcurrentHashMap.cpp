@@ -69,7 +69,6 @@ item ConcurrentHashMap::maximum(unsigned int nt) {
     int rc;
     int i;
     pthread_t threads[nt];
-    void *status;
     maximum_thread_args args;
 
     // Preparo los argumentos de la funcion maximum_thread_function
@@ -89,7 +88,7 @@ item ConcurrentHashMap::maximum(unsigned int nt) {
 
     // Espero por cada uno de los threads
     for (i = 0; i < nt; i++) {
-        rc = pthread_join(threads[i], &status);
+        rc = pthread_join(threads[i], nullptr);
         if (rc) {
             cout << "Error:unable to join," << rc << endl;
             exit(-1);
@@ -114,7 +113,6 @@ ConcurrentHashMap ConcurrentHashMap::count_words(list<string> archs) {
     int rc;
     int i;
     pthread_t threads[archs.size()];
-    void *status;
     count_words_single_file_thread_args args;
 
     args.map = map;
@@ -130,7 +128,7 @@ ConcurrentHashMap ConcurrentHashMap::count_words(list<string> archs) {
     }
 
     for (i = 0; i < archs.size(); i++) {
-        rc = pthread_join(threads[i], &status);
+        rc = pthread_join(threads[i], nullptr);
         if (rc) {
             cout << "Error:unable to join," << rc << endl;
             exit(-1);
@@ -145,7 +143,6 @@ ConcurrentHashMap ConcurrentHashMap::count_words(unsigned int n, list<string> ar
     int rc;
     int i;
     pthread_t threads[n];
-    void *status;
 
     count_words_thread_args args;
 
@@ -163,7 +160,7 @@ ConcurrentHashMap ConcurrentHashMap::count_words(unsigned int n, list<string> ar
     }
 
     for (i = 0; i < n; i++) {
-        rc = pthread_join(threads[i], &status);
+        rc = pthread_join(threads[i], nullptr);
         if (rc) {
             cout << "Error:unable to join," << rc << endl;
             exit(-1);
@@ -179,8 +176,6 @@ item ConcurrentHashMap::maximum(unsigned int p_archivos, unsigned int p_maximos,
 
     pthread_t archivos_threads[p_archivos];
     count_words_thread_args archivos_threads_args;
-
-    void *status;
 
     auto map = new ConcurrentHashMap;
 
@@ -198,7 +193,7 @@ item ConcurrentHashMap::maximum(unsigned int p_archivos, unsigned int p_maximos,
     }
 
     for (i = 0; i < archs.size(); i++) {
-        rc = pthread_join(archivos_threads[i], &status);
+        rc = pthread_join(archivos_threads[i], nullptr);
         if (rc) {
             cout << "Error:unable to join," << rc << endl;
             exit(-1);
