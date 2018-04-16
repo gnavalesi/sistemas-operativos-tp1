@@ -1,0 +1,119 @@
+\section{Ejercicio 1}
+
+Definimos como $item$ a un par $(string, entero)$ y como $bucket$ a una lista enlazada de $item$s.
+
+
+\subsection{Estructura de ConcurrentHashMap}
+
+La clase cuenta con un miembro público \mintinline{c++}{bucket* tabla[26]} que guardará los buckets correspondientes a cada clave. En un miembro privado \mintinline{c++}{mutex *tabla_mutex[26]} se almacenará por cada bucket un mutex que permitirá aplicar exclusión mutua sobre ellos (ver \cite{cppref-mutex}).
+
+Otros miembros privados son \mintinline{c++}{unsigned int hash_key(string *key)}, que mapea la primera letra de \mintinline{c++}{key} a $\{ 0, 1, \cdots, 25 \}$ de forma biyectiva, \mintinline{c++}{struct}s de parámetros y funciones de threads, y otras funciones auxiliares.
+
+
+\subsection{Constructor y destructor}
+
+El constructor simplementa crea los 26 buckets y los correspondientes mutexs y el destructor los elimina liberando su memoria.
+
+
+\subsection{\mintinline{c++}{void addAndInc(string key)}}
+
+\begin{minted}[tabsize=4]{c++}
+void addAndInc(string key) {
+	unsigned int index = hash_key(&key);
+	// Activo locking el bucket
+	tabla_mutex[index]->lock();
+	// Busco la clave
+	bucket::Iterador it = tabla[index]->CrearIt();
+	while (it.HaySiguiente() && it.Siguiente().first != key) it.Avanzar();
+	// Si existe, incremento la cuenta. Si no, la inicio en 1.
+	if (it.HaySiguiente()) it.Siguiente().second++;
+	else tabla[index]->push_front(item(key.data(), 1));
+	// Desactivo locking el bucket
+	tabla_mutex[index]->unlock();
+}
+\end{minted}
+
+El locking del bucket antes de realizar la búsqueda e incrementar/iniciar el contador garantiza que sólo exista contención en caso de colisión de hash.
+
+
+\subsection{\mintinline{c++}{bool member(string key)}}
+
+\begin{minted}[tabsize=4]{c++}
+bool member(string key) {
+	unsigned int index = hash_key(&key);
+	// Busco la clave
+	bucket::Iterador it = tabla[index]->CrearIt();
+	while (it.HaySiguiente() && it.Siguiente().first != key) it.Avanzar();
+	// Devuelvo si la encontré o no
+	return it.HaySiguiente();
+}
+\end{minted}
+
+Como no hay locking en la función, esta es wait-free.
+
+
+\subsection{\mintinline{c++}{item maximum(unsigned int nt)}}
+
+La función crea threads que ejecutan la función \mintinline{c++}{maximum_thread_function} y reciben sus argumentos a través de la estructura \mintinline{c++}{maximum_thread_args}.
+
+\begin{minted}[tabsize=4]{c++}
+struct maximum_thread_args {
+	ConcurrentHashMap *map = nullptr; // Puntero al ConcurrentHashMap
+	atomic<int> index; // Índice del siguiente bucket a procesar
+	item general_maximum; // Item con máxima cuenta encontrado
+	mutex general_maximum_mutex; // Mutex para general_maximum
+};
+\end{minted}
+
+\begin{minted}[breaklines, tabsize=4]{c++}
+item maximum(unsigned int nt) {
+	pthread_t threads[nt];
+	// Preparo los argumentos de maximum_thread_function
+	maximum_thread_args args;
+	args.map = this;
+	args.index = 0;
+	args.general_maximum = item("", 0);
+	// Creo los threads
+	for (unsigned int i = 0; i < nt; i++)
+		pthread_create(&threads[i], nullptr, maximum_thread_function, &args);
+
+	// Espero por cada uno de los threads
+	for (unsigned int i = 0; i < nt; i++)
+		pthread_join(threads[i], nullptr);
+	// Devuelvo el máximo
+	return args.general_maximum;
+}
+\end{minted}
+
+\begin{minted}[breaklines, tabsize=4]{c++}
+void *maximum_thread_function(void *thread_args) {
+	struct maximum_thread_args *args = thread_args;
+	item maximum = item("", 0);
+	int index;
+	// Obtengo e incremento el índice del siguiente bucket atómicamente
+	for (index = args->index++; index < 26; index = args->index++) {
+		// Busco el máximo haciendo locking del bucket
+		args->map->tabla_mutex[index]->lock();
+		bucket::Iterador it = args->map->tabla[index]->CrearIt();
+		for (it; it.HaySiguiente(); it.Avanzar()) {
+			if (it.Siguiente().second > maximum.second)
+				maximum = it.Siguiente();
+		}
+		args->map->tabla_mutex[index]->unlock();
+	}
+	// Actualizo el máximo si encontré uno
+	if (maximum != item("", 0)) {
+		args->general_maximum_mutex.lock();
+		if (maximum.second > args->general_maximum.second)
+			args->general_maximum = maximum;
+		args->general_maximum_mutex.unlock();
+	}
+	return nullptr;
+}
+\end{minted}
+
+El uso de \mintinline{c++}{atomic<int> index} en el ciclo permite obtener el valor de \mintinline{c++}{args->index} e incrementarlo de forma atómica (ver \cite{cppref-atomic}), lo que garantiza que cada thread obtenga un índice único.
+
+El locking del bucket antes de buscar el máximo hace que la búsqueda no sea concurrente con la función \mintinline{c++}{void addAndInc(string key)}.
+
+El ciclo hace que los threads sigan procesando buckets si queda alguno sin procesar. Cuando a un thread no le quedan buckets, si encontró un máximo local, se activa el locking de la variable compartida que guarda el valor máximo global y se actualiza su valor. Esto evita las condiciones de carrera sobre esta variable.
