@@ -226,7 +226,7 @@ unsigned int ConcurrentHashMap::hash_key(string *key) {
 
 list<string> ConcurrentHashMap::words(string &arch) {
     list<string> res;
-    string line;
+    string palabra;
 
     ifstream ifs(arch);
     if (!ifs) {
@@ -234,8 +234,8 @@ list<string> ConcurrentHashMap::words(string &arch) {
         exit(1);
     }
 
-    while (ifs >> line) {
-        res.push_back(line);
+    while (ifs >> palabra) {
+        res.push_back(palabra);
     }
 
     return res;
