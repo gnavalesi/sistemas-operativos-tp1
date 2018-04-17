@@ -95,7 +95,7 @@ ConcurrentHashMap ConcurrentHashMap::count_words(list<string> archs) {
     args.archs_iterator_end = archs.end();
 
     // Creo los threads y espero a que terminen
-    create_and_join_threads(archs.size(), count_words_thread_function, &args);
+    create_and_join_threads(archs.size(), count_words_single_file_thread_function, &args);
 
     return *args.map;
 }
