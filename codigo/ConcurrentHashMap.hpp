@@ -31,12 +31,6 @@ private:
         mutex archs_iterator_mutex;
     };
 
-    struct count_words_single_file_thread_args {
-        ConcurrentHashMap *map = nullptr;
-        list<string>::iterator archs_iterator;
-        mutex archs_iterator_mutex;
-    };
-
     static unsigned int hash_key(string *key);
     static list<string> words(string &arch);
     static void *maximum_thread_function(void *thread_args);

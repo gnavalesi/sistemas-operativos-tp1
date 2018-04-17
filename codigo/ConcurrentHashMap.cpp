@@ -115,13 +115,14 @@ ConcurrentHashMap ConcurrentHashMap::count_words(list<string> archs) {
     int rc;
     unsigned int i;
     pthread_t threads[archs.size()];
-    count_words_single_file_thread_args args;
+    count_words_thread_args args;
 
     args.map = map;
     args.archs_iterator = archs.begin();
+    args.archs_iterator_end = archs.end();
 
     for (i = 0; i < archs.size(); i++) {
-        rc = pthread_create(&threads[i], nullptr, count_words_single_file_thread_function, &args);
+        rc = pthread_create(&threads[i], nullptr, count_words_thread_function, &args);
 
         if (rc) {
             cerr << "Error:unable to create thread," << rc << endl;
@@ -281,17 +282,21 @@ void *ConcurrentHashMap::count_words_thread_function(void *thread_args) {
 }
 
 void *ConcurrentHashMap::count_words_single_file_thread_function(void *thread_args) {
-    struct count_words_single_file_thread_args *args;
-    args = (struct count_words_single_file_thread_args *) thread_args;
+    struct count_words_thread_args *args;
+    args = (struct count_words_thread_args *) thread_args;
 
-    string arch;
+    list<string>::iterator archs_iterator;
+    bool not_over = true;
 
     args->archs_iterator_mutex.lock();
-    arch = *args->archs_iterator;
-    args->archs_iterator++;
+
+    archs_iterator = args->archs_iterator;
+    if (archs_iterator == args->archs_iterator_end) not_over = false;
+    else args->archs_iterator++;
+
     args->archs_iterator_mutex.unlock();
 
-    count_words(arch, args->map);
+    if (not_over) count_words(*archs_iterator, args->map);
 
 	return nullptr;
 }
