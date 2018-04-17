@@ -9,9 +9,9 @@ LDLIBS = -lpthread
 .cpp.o:
 	$(CXX) $(CXXFLAGS) -c $<
 
-BIN = test-1 test-2 test-3 test-4 test-5
+BIN = test-1 test-2 test-3 test-4 test-5 test-6
 OBJ = ConcurrentHashMap.o
-RUN = test-1-run test-2-run test-3-run test-4-run test-5-run
+RUN = test-1-run test-2-run test-3-run test-4-run test-5-run test-6-run
 
 all: $(BIN)
 
@@ -59,6 +59,14 @@ test-5-run: test-5
 		./test-5 $$((i + 1)) $$((j + 1)) | diff -u - corpus-max; \
 	done; done
 	rm -f corpus-max corpus-[0-4]
+
+test-6: $(OBJ) test-6.cpp
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test-6.cpp $(OBJ) $(LDLIBS)
+
+test-6-run: test-6
+	for i in 0 1 2 3 4; do sed -n "$$((i * 500 + 1)),$$(((i + 1) * 500))p" corpus >corpus-"$$i"; done
+	./test-6
+	rm -f corpus-[0-4]
 
 clean:
 	rm -f $(BIN) $(OBJ)
