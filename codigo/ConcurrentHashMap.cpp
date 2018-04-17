@@ -68,34 +68,14 @@ bool ConcurrentHashMap::member(string key) {
 }
 
 item ConcurrentHashMap::maximum(unsigned int nt) {
-    int rc;
-    unsigned int i;
-    pthread_t threads[nt];
-    maximum_thread_args args;
-
     // Preparo los argumentos de la funcion maximum_thread_function
+    maximum_thread_args args;
     args.map = this;
     args.index = 0;
     args.general_maximum = item("", 0);
 
-    // Creo los threads
-    for (i = 0; i < nt; i++) {
-        rc = pthread_create(&threads[i], nullptr, maximum_thread_function, (void *) &args);
-
-        if (rc) {
-            cerr << "Error:unable to create thread," << rc << endl;
-            exit(-1);
-        }
-    }
-
-    // Espero por cada uno de los threads
-    for (i = 0; i < nt; i++) {
-        rc = pthread_join(threads[i], nullptr);
-        if (rc) {
-            cout << "Error:unable to join," << rc << endl;
-            exit(-1);
-        }
-    }
+    // Creo los threads y espero a que terminen
+    create_and_join_threads(nt, maximum_thread_function, &args);
 
     return args.general_maximum;
 }
@@ -111,100 +91,35 @@ ConcurrentHashMap ConcurrentHashMap::count_words(string arch) {
 }
 
 ConcurrentHashMap ConcurrentHashMap::count_words(list<string> archs) {
-    auto map = new ConcurrentHashMap();
-    int rc;
-    unsigned int i;
-    pthread_t threads[archs.size()];
     count_words_thread_args args;
-
-    args.map = map;
+    args.map = new ConcurrentHashMap();
     args.archs_iterator = archs.begin();
     args.archs_iterator_end = archs.end();
 
-    for (i = 0; i < archs.size(); i++) {
-        rc = pthread_create(&threads[i], nullptr, count_words_thread_function, &args);
+    create_and_join_threads(archs.size(), count_words_thread_function, &args);
 
-        if (rc) {
-            cerr << "Error:unable to create thread," << rc << endl;
-            exit(-1);
-        }
-    }
-
-    for (i = 0; i < archs.size(); i++) {
-        rc = pthread_join(threads[i], nullptr);
-        if (rc) {
-            cout << "Error:unable to join," << rc << endl;
-            exit(-1);
-        }
-    }
-
-    return *map;
+    return *args.map;
 }
 
 ConcurrentHashMap ConcurrentHashMap::count_words(unsigned int n, list<string> archs) {
-    auto map = new ConcurrentHashMap();
-    int rc;
-    unsigned int i;
-    pthread_t threads[n];
-
     count_words_thread_args args;
-
-    args.map = map;
+    args.map = new ConcurrentHashMap();
     args.archs_iterator = archs.begin();
     args.archs_iterator_end = archs.end();
 
-    for (i = 0; i < n; i++) {
-        rc = pthread_create(&threads[i], nullptr, count_words_thread_function, &args);
+    create_and_join_threads(n, count_words_thread_function, &args);
 
-        if (rc) {
-            cerr << "Error:unable to create thread," << rc << endl;
-            exit(-1);
-        }
-    }
-
-    for (i = 0; i < n; i++) {
-        rc = pthread_join(threads[i], nullptr);
-        if (rc) {
-            cout << "Error:unable to join," << rc << endl;
-            exit(-1);
-        }
-    }
-
-    return *map;
+    return *args.map;
 }
 
 item ConcurrentHashMap::maximum(unsigned int p_archivos, unsigned int p_maximos, list<string> archs) {
-    int rc;
-    unsigned int i;
-    list<string>::iterator it;
+    count_words_thread_args args;
+    args.map = new ConcurrentHashMap();
+    args.archs_iterator = archs.begin();
+    args.archs_iterator_end = archs.end();
 
-    pthread_t archivos_threads[p_archivos];
-    count_words_thread_args archivos_threads_args;
-
-    auto map = new ConcurrentHashMap();
-
-    archivos_threads_args.map = map;
-    archivos_threads_args.archs_iterator = archs.begin();
-    archivos_threads_args.archs_iterator_end = archs.end();
-
-    for (i = 0; i < p_archivos; i++) {
-        rc = pthread_create(&archivos_threads[i], nullptr, count_words_thread_function, &archivos_threads_args);
-
-        if (rc) {
-            cerr << "Error:unable to create thread," << rc << endl;
-            exit(-1);
-        }
-    }
-
-    for (i = 0; i < p_archivos; i++) {
-        rc = pthread_join(archivos_threads[i], nullptr);
-        if (rc) {
-            cout << "Error:unable to join," << rc << endl;
-            exit(-1);
-        }
-    }
-
-    item maximum = map->maximum(p_maximos);
+    create_and_join_threads(p_archivos, count_words_thread_function, &args);
+    item maximum = args.map->maximum(p_maximos);
 
     return maximum;
 }
@@ -307,5 +222,21 @@ void ConcurrentHashMap::count_words(string arch, ConcurrentHashMap *map) {
 
     for (it = palabras.begin(); it != palabras.end(); it++) {
         map->addAndInc(*it);
+    }
+}
+
+void ConcurrentHashMap::create_and_join_threads(unsigned int n, void *thread_function(void*), void *thread_args) {
+    pthread_t threads[n];
+    for (unsigned int i = 0; i < n; ++i) {
+        if (pthread_create(&threads[i], nullptr, thread_function, thread_args)) {
+            cerr << "Error: unable to create thread" << endl;
+            exit(-1);
+        }
+    }
+    for (unsigned int i = 0; i < n; ++i) {
+        if (pthread_join(threads[i], nullptr)) {
+            cout << "Error: unable to join thread" << endl;
+            exit(-1);
+        }
     }
 }

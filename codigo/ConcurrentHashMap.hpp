@@ -37,6 +37,7 @@ private:
     static void *count_words_thread_function(void *thread_args);
     static void *count_words_single_file_thread_function(void *thread_args);
     static void count_words(string arch, ConcurrentHashMap *map);
+    static void create_and_join_threads(unsigned int n, void *thread_function(void*), void *thread_args);
 
 public:
     bucket* tabla[26];
