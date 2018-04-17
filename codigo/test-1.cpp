@@ -26,7 +26,7 @@ int main(void) {
     h.addAndInc("bisonte");
     h.addAndInc("bisonte");
 
-    pair<string, int> max2 = h.maximum(1);
+    pair<string, int> max2 = h.maximum(4);
     assert(max2.first == "bisonte");
     assert(max2.second == 3);
 
