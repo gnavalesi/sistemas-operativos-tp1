@@ -15,7 +15,7 @@ Como \mintinline{c++}{_head.exchange(newHead)} cambia el valor de \mintinline{c+
 
 \subsection{\mintinline{c++}{ConcurrentHashMap count_words(string arch)}}
 
-\begin{minted}[tabsize=4]{c++}
+\begin{minted}{c++}
 ConcurrentHashMap count_words(string arch) {
 	ConcurrentHashMap map;
 	count_words(arch, &map);
@@ -23,7 +23,7 @@ ConcurrentHashMap count_words(string arch) {
 }
 \end{minted}
 
-\begin{minted}[tabsize=4]{c++}
+\begin{minted}{c++}
 void count_words(string arch, ConcurrentHashMap *map) {
 	list<string> palabras = words(arch);
 	list<string>::iterator it;
@@ -33,7 +33,7 @@ void count_words(string arch, ConcurrentHashMap *map) {
 }
 \end{minted}
 
-\begin{minted}[tabsize=4]{c++}
+\begin{minted}{c++}
 list<string> words(string arch) {
 	list<string> palabras;
 	archivo = abrir_archivo(arch);

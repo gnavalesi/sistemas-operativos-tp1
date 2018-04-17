@@ -17,7 +17,7 @@ El constructor simplementa crea los 26 buckets y los correspondientes mutexs y e
 
 \subsection{\mintinline{c++}{void addAndInc(string key)}}
 
-\begin{minted}[tabsize=4]{c++}
+\begin{minted}{c++}
 void addAndInc(string key) {
 	unsigned int index = hash_key(&key);
 	// Activo locking el bucket
@@ -38,7 +38,7 @@ El locking del bucket antes de realizar la búsqueda e incrementar/iniciar el co
 
 \subsection{\mintinline{c++}{bool member(string key)}}
 
-\begin{minted}[tabsize=4]{c++}
+\begin{minted}{c++}
 bool member(string key) {
 	unsigned int index = hash_key(&key);
 	// Busco la clave
@@ -56,7 +56,7 @@ Como no hay locking en la función, esta es wait-free.
 
 La función crea threads que ejecutan la función \mintinline{c++}{maximum_thread_function} y reciben sus argumentos a través de la estructura \mintinline{c++}{maximum_thread_args}.
 
-\begin{minted}[tabsize=4]{c++}
+\begin{minted}{c++}
 struct maximum_thread_args {
 	ConcurrentHashMap *map = nullptr; // Puntero al ConcurrentHashMap
 	atomic<int> index; // Índice del siguiente bucket a procesar
@@ -65,7 +65,7 @@ struct maximum_thread_args {
 };
 \end{minted}
 
-\begin{minted}[breaklines, tabsize=4]{c++}
+\begin{minted}{c++}
 item maximum(unsigned int nt) {
 	pthread_t threads[nt];
 	// Preparo los argumentos de maximum_thread_function
@@ -85,7 +85,7 @@ item maximum(unsigned int nt) {
 }
 \end{minted}
 
-\begin{minted}[breaklines, tabsize=4]{c++}
+\begin{minted}{c++}
 void *maximum_thread_function(void *thread_args) {
 	struct maximum_thread_args *args = thread_args;
 	item maximum = item("", 0);
