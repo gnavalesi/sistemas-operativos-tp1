@@ -122,9 +122,13 @@ item ConcurrentHashMap::maximum(unsigned int p_archivos, unsigned int p_maximos,
 
     // Creo los threads y espero a que terminen
     create_and_join_threads(p_archivos, count_words_thread_function, &args);
-    item maximum = args.map->maximum(p_maximos);
 
-    return maximum;
+    // Devuelvo el maximo
+    return args.map->maximum(p_maximos);
+}
+
+item ConcurrentHashMap::maximum2(unsigned int p_archivos, unsigned int p_maximos, list<string> archs) {
+    return count_words(p_archivos, archs).maximum(p_maximos);
 }
 
 // Private member functions
