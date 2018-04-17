@@ -8,16 +8,17 @@ using namespace std;
 // Public member functions
 
 ConcurrentHashMap::ConcurrentHashMap() {
+    tabla_mutex = new mutex;
     for (unsigned int i = 0; i < NUM_BUCKETS; i++) {
         tabla[i] = new bucket();
-        tabla_mutex[i] = new mutex;
+        bucket_mutex[i] = new mutex;
     }
 }
 
 ConcurrentHashMap::~ConcurrentHashMap() {
     for (unsigned int i = 0; i < NUM_BUCKETS; i++) {
         delete tabla[i];
-        delete tabla_mutex[i];
+        delete bucket_mutex[i];
     }
 }
 
@@ -25,7 +26,7 @@ ConcurrentHashMap &ConcurrentHashMap::operator=(const ConcurrentHashMap &obj) {
     bucket::Iterador iterador;
 
     for (unsigned int i = 0; i < NUM_BUCKETS; i++) {
-        tabla_mutex[i]->lock();
+        bucket_mutex[i]->lock();
 
         delete tabla[i];
         tabla[i] = new bucket();
@@ -33,16 +34,18 @@ ConcurrentHashMap &ConcurrentHashMap::operator=(const ConcurrentHashMap &obj) {
             tabla[i]->push_front(iterador.Siguiente());
         }
 
-        tabla_mutex[i]->unlock();
+        bucket_mutex[i]->unlock();
     }
 
     return *this;
 }
 
 void ConcurrentHashMap::addAndInc(string key) {
+
     unsigned int index = hash_key(&key);
 
-    tabla_mutex[index]->lock();
+    tabla_mutex->lock();
+    bucket_mutex[index]->lock();
 
     // Busco la clave
     bucket::Iterador it = tabla[index]->CrearIt();
@@ -52,7 +55,8 @@ void ConcurrentHashMap::addAndInc(string key) {
     if (it.HaySiguiente()) it.Siguiente().second++;
     else tabla[index]->push_front(item(key.data(), 1));
 
-    tabla_mutex[index]->unlock();
+    bucket_mutex[index]->unlock();
+    tabla_mutex->unlock();
 }
 
 bool ConcurrentHashMap::member(string key) {
@@ -73,8 +77,12 @@ item ConcurrentHashMap::maximum(unsigned int nt) {
     args.index = 0;
     args.general_maximum = item("", 0);
 
+    tabla_mutex->lock();
+
     // Creo los threads y espero a que terminen
     create_and_join_threads(nt, maximum_thread_function, &args);
+
+    tabla_mutex->unlock();
 
     return args.general_maximum;
 }
@@ -163,11 +171,11 @@ void *ConcurrentHashMap::maximum_thread_function(void *thread_args) {
 
     // Obtengo el indice de un bucket y guardo el maximo local
     for (index = args->index++; index < NUM_BUCKETS; index = args->index++) {
-        args->map->tabla_mutex[index]->lock();
+        args->map->bucket_mutex[index]->lock();
         for (auto it = args->map->tabla[index]->CrearIt(); it.HaySiguiente(); it.Avanzar()) {
         	if (it.Siguiente().second > maximum.second) maximum = it.Siguiente();
         }
-        args->map->tabla_mutex[index]->unlock();
+        args->map->bucket_mutex[index]->unlock();
     }
 
     // Actualizo el maximo global si encontre un maximo local
