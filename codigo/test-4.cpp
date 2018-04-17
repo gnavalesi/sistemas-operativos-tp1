@@ -19,7 +19,7 @@ void *count_words(void* thr_args) {
 
     args = (struct thread_args *) thr_args;
 
-    for(it = args->words->begin(); it != args->words->end(); it++) {
+    for (it = args->words->begin(); it != args->words->end(); it++) {
         args->h->addAndInc(*it);
         assert(args->h->member(*it));
     }
@@ -39,25 +39,21 @@ int main(int argc, char **argv) {
 	int i;
     pthread_t threads[NUM_THREADS];
     thread_args args[NUM_THREADS];
-    void *status;
-    int rc;
     pair<string, unsigned int> max;
 
     for(i = 0; i < NUM_THREADS; i++) {
         args[i].h = h;
         args[i].words = &ls[i];
 
-        rc = pthread_create(&threads[i], nullptr, count_words, &args[i]);
-        if (rc) {
-            cerr << "Error:unable to create thread," << rc << endl;
+        if (pthread_create(&threads[i], nullptr, count_words, &args[i])) {
+            cerr << "Error: unable to create thread" << endl;
             exit(-1);
         }
     }
 
     for (i = 0; i < NUM_THREADS; i++) {
-        rc = pthread_join(threads[i], &status);
-        if (rc) {
-            cout << "Error:unable to join," << rc << endl;
+        if (pthread_join(threads[i], nullptr)) {
+            cout << "Error: unable to join thread" << endl;
             exit(-1);
         }
     }
