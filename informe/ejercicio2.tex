@@ -1,0 +1,46 @@
+\section{Ejercicio 2}
+
+
+\subsection{\mintinline{c++}{void push_front(const T& val)}}
+
+\begin{minted}[tabsize=4]{c++}
+void push_front(const T& val) {
+	Nodo *newHead = new Nodo(val);
+	newHead->_next = _head.exchange(newHead);
+}
+\end{minted}
+
+Como \mintinline{c++}{_head.exchange(newHead)} cambia el valor de \mintinline{c++}{_head} por el de \mintinline{c++}{newHead} y devuelve su valor anterior de forma atómica, no hay condiciones de carrera sobre esta variable y \mintinline{c++}{newHead} pasa a ser el primer elemento de la lista. Dado que la asignación de \mintinline{c++}{newHead->_next} no es atómica, no se puede garantizar que inmediatamente después de la operación anterior \mintinline{c++}{newHead} esté enlazada al valor que tenía \mintinline{c++}{_head} previo al \mintinline{c++}{exchange}. Es posible que en este período se agregue otro nodo delante de \mintinline{c++}{newHead}. Pero dado que \mintinline{c++}{_head.exchange(newHead)} devuelve el valor anterior de \mintinline{c++}{_head} atómicamente, la asignación lo guardará en \mintinline{c++}{newHead->_next} eventualmente y los nodos quedarán correctamente enlazados.
+
+
+\subsection{\mintinline{c++}{ConcurrentHashMap count_words(string arch)}}
+
+\begin{minted}[tabsize=4]{c++}
+ConcurrentHashMap count_words(string arch) {
+	ConcurrentHashMap map;
+	count_words(arch, &map);
+	return map;
+}
+\end{minted}
+
+\begin{minted}[tabsize=4]{c++}
+void count_words(string arch, ConcurrentHashMap *map) {
+	list<string> palabras = words(arch);
+	list<string>::iterator it;
+	for (it = palabras.begin(); it != palabras.end(); it++) {
+		map->addAndInc(*it);
+	}
+}
+\end{minted}
+
+\begin{minted}[tabsize=4]{c++}
+list<string> words(string arch) {
+	list<string> palabras;
+	archivo = abrir_archivo(arch);
+    while (archivo.quedan_palabras()) {
+        palabras.push_back(archivo.leer_palabra());
+        archivo.avanzar_palabra();
+    }
+    return palabras;
+}
+\end{minted}
