@@ -10,12 +10,14 @@
 
 using namespace std;
 
+#define NUM_BUCKETS 26
+
 typedef pair<string, unsigned int> item;
 typedef Lista<item> bucket;
 
 class ConcurrentHashMap {
 private:
-    mutex *tabla_mutex[26];
+    mutex *tabla_mutex[NUM_BUCKETS];
 
     struct maximum_thread_args {
         ConcurrentHashMap *map = nullptr;
@@ -40,7 +42,7 @@ private:
     static void create_and_join_threads(unsigned int n, void *thread_function(void*), void *thread_args);
 
 public:
-    bucket* tabla[26];
+    bucket* tabla[NUM_BUCKETS];
 
     ConcurrentHashMap();
     ~ConcurrentHashMap();
