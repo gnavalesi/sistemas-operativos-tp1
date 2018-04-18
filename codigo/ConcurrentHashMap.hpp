@@ -17,7 +17,6 @@ typedef Lista<item> bucket;
 
 class ConcurrentHashMap {
 private:
-    mutex *tabla_mutex;
     mutex *bucket_mutex[NUM_BUCKETS];
 
     struct maximum_thread_args {

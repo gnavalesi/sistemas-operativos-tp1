@@ -8,7 +8,6 @@ using namespace std;
 // Public member functions
 
 ConcurrentHashMap::ConcurrentHashMap() {
-    tabla_mutex = new mutex;
     for (unsigned int i = 0; i < NUM_BUCKETS; i++) {
         tabla[i] = new bucket();
         bucket_mutex[i] = new mutex;
@@ -44,7 +43,6 @@ void ConcurrentHashMap::addAndInc(string key) {
 
     unsigned int index = hash_key(&key);
 
-    tabla_mutex->lock();
     bucket_mutex[index]->lock();
 
     // Busco la clave
@@ -56,7 +54,6 @@ void ConcurrentHashMap::addAndInc(string key) {
     else tabla[index]->push_front(item(key.data(), 1));
 
     bucket_mutex[index]->unlock();
-    tabla_mutex->unlock();
 }
 
 bool ConcurrentHashMap::member(string key) {
@@ -71,18 +68,22 @@ bool ConcurrentHashMap::member(string key) {
 }
 
 item ConcurrentHashMap::maximum(unsigned int nt) {
+    unsigned int i;
+
     // Preparo los argumentos de los threads
     maximum_thread_args args;
     args.map = this;
     args.index = 0;
     args.general_maximum = item("", 0);
 
-    tabla_mutex->lock();
+    // Activo el lock de todos los buckets
+    for (i = 0; i < NUM_BUCKETS; ++i) bucket_mutex[i]->lock();
 
     // Creo los threads y espero a que terminen
     create_and_join_threads(nt, maximum_thread_function, &args);
 
-    tabla_mutex->unlock();
+    // Desactivo el lock de todos los buckets
+    for (i = 0; i < NUM_BUCKETS; ++i) bucket_mutex[i]->unlock();
 
     return args.general_maximum;
 }
