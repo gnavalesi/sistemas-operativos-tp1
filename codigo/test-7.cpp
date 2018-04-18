@@ -24,15 +24,17 @@ long timediff(const timespec &start, const timespec &end) {
 
 int main(int argc, char const *argv[]) {
 
-	list<string> archs = { "corpus-0", "corpus-1", "corpus-2", "corpus-3", "corpus-4" };
-
-	if (argc != 3) {
-		cout << "uso: " << argv[0] << " p_archivos p_maximos" << endl;
+	if (argc != 4) {
+		cout << "uso: " << argv[0] << "cant_archivos p_archivos p_maximos" << endl;
 		exit(0);
 	}
 
-	unsigned int p_archivos = stoi(argv[1]);
-	unsigned int p_maximos = stoi(argv[2]);
+	unsigned int cant_archivos = stoi(argv[1]);
+	unsigned int p_archivos = stoi(argv[2]);
+	unsigned int p_maximos = stoi(argv[3]);
+
+	list<string> archs;
+	for (unsigned int i = 0; i < cant_archivos; ++i) archs.push_back("corpus-" + to_string(i));
 
 	timespec start1 = gettime();
 	item max1 = ConcurrentHashMap::maximum(p_archivos, p_maximos, archs);

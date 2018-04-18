@@ -72,10 +72,10 @@ test-7: $(OBJ) test-7.cpp
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test-7.cpp $(OBJ) $(LDLIBS)
 
 test-7-run: test-7
-	for i in 0 1 2 3 4; do sed -n "$$((i * 500 + 1)),$$(((i + 1) * 500))p" corpus >corpus-"$$i"; done
+	for i in $$(seq 0 999); do sed -n "$$((i * 500 + 1)),$$(((i + 1) * 500))p" corpus >corpus-"$$i"; done
 	echo "p_archivos,p_maximos,maximum_time,maximum2_time" > test-7.csv
-	for i in $$(seq 1 10); do for j in $$(seq 1 10); do echo -n "$$i,$$j,"; ./test-7 $$i $$j; done; done >> test-7.csv
-	rm -f corpus-[0-4]
+	for i in $$(seq 1 5); do for j in $$(seq 1 5); do echo -n "$$i,$$j,"; ./test-7 1000 $$i $$j; done; done >> test-7.csv
+	rm -f corpus-*
 
 clean:
 	rm -f $(BIN) $(OBJ)
