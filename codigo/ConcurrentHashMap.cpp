@@ -129,7 +129,7 @@ item ConcurrentHashMap::maximum(unsigned int p_archivos, unsigned int p_maximos,
     bucket::Iterador bucket_iterator;
     ConcurrentHashMap general_map;
 
-    for(i = 0; i < archs.size(); i++) {
+    for (i = 0; i < archs.size(); i++) {
         maps.push_back(new ConcurrentHashMap());
     }
 
@@ -142,14 +142,12 @@ item ConcurrentHashMap::maximum(unsigned int p_archivos, unsigned int p_maximos,
     // Creo los threads y espero a que terminen
     create_and_join_threads(p_archivos, maximum_count_words_thread_function, &args);
 
-    for(maps_iterator = maps.begin(); maps_iterator != maps.end(); maps_iterator++) {
-        for(i = 0; i < NUM_BUCKETS; i++) {
+    for (maps_iterator = maps.begin(); maps_iterator != maps.end(); maps_iterator++) {
+        for (i = 0; i < NUM_BUCKETS; i++) {
             bucket_iterator = (*maps_iterator)->tabla[i]->CrearIt();
 
-            while(bucket_iterator.HaySiguiente()) {
+            for (; bucket_iterator.HaySiguiente(); bucket_iterator.Avanzar())
                 general_map.addAndSum(bucket_iterator.Siguiente());
-                bucket_iterator.Avanzar();
-            }
         }
     }
 
@@ -321,7 +319,7 @@ void ConcurrentHashMap::addAndSum(item current_item) {
     while (it.HaySiguiente() && it.Siguiente().first != current_item.first) it.Avanzar();
 
     // Si la encuentro, incremento la cuenta. Si no, la inicializo en el valor del item.
-    if (it.HaySiguiente()) it.Siguiente().second+=current_item.second;
+    if (it.HaySiguiente()) it.Siguiente().second += current_item.second;
     else tabla[index]->push_front(item(current_item.first, current_item.second));
 
     bucket_mutex[index]->unlock();
