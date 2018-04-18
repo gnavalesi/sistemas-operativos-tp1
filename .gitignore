@@ -8,7 +8,6 @@ test-4
 test-5
 test-6
 *.o
-informe/*.pdf
 informe/*.aux
 informe/*.log
 informe/*.out
