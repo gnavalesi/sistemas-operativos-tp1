@@ -122,17 +122,39 @@ ConcurrentHashMap ConcurrentHashMap::count_words(unsigned int n, list<string> ar
 }
 
 item ConcurrentHashMap::maximum(unsigned int p_archivos, unsigned int p_maximos, list<string> archs) {
+    unsigned int i;
+    list<ConcurrentHashMap*> maps;
+    list<ConcurrentHashMap*>::iterator maps_iterator;
+    item current_item;
+    bucket::Iterador bucket_iterator;
+    ConcurrentHashMap general_map;
+
+    for(i = 0; i < archs.size(); i++) {
+        maps.push_back(new ConcurrentHashMap());
+    }
+
     // Preparo los argumentos de los threads
-    count_words_thread_args args;
-    args.map = new ConcurrentHashMap();
+    maximum_count_words_thread_args args;
+    args.maps_iterator = maps.begin();
     args.archs_iterator = archs.begin();
     args.archs_iterator_end = archs.end();
 
     // Creo los threads y espero a que terminen
-    create_and_join_threads(p_archivos, count_words_thread_function, &args);
+    create_and_join_threads(p_archivos, maximum_count_words_thread_function, &args);
+
+    for(maps_iterator = maps.begin(); maps_iterator != maps.end(); maps_iterator++) {
+        for(i = 0; i < NUM_BUCKETS; i++) {
+            bucket_iterator = (*maps_iterator)->tabla[i]->CrearIt();
+
+            while(bucket_iterator.HaySiguiente()) {
+                general_map.addAndSum(bucket_iterator.Siguiente());
+                bucket_iterator.Avanzar();
+            }
+        }
+    }
 
     // Devuelvo el maximo
-    return args.map->maximum(p_maximos);
+    return general_map.maximum(p_maximos);
 }
 
 item ConcurrentHashMap::maximum2(unsigned int p_archivos, unsigned int p_maximos, list<string> archs) {
@@ -211,6 +233,33 @@ void *ConcurrentHashMap::count_words_thread_function(void *thread_args) {
 	return nullptr;
 }
 
+void *ConcurrentHashMap::maximum_count_words_thread_function(void *thread_args) {
+    string arch;
+    ConcurrentHashMap* map = nullptr;
+    struct maximum_count_words_thread_args *args;
+
+    args = (struct maximum_count_words_thread_args *) thread_args;
+
+    // Obtengo un archivo de la lista y hago count_words mientras queden archivos
+    bool not_over = true;
+    while (not_over) {
+        args->iterators_mutex.lock();
+        not_over = args->archs_iterator != args->archs_iterator_end;
+        if (not_over) {
+            arch = *args->archs_iterator;
+            args->archs_iterator++;
+
+            map = *args->maps_iterator;
+            args->maps_iterator++;
+        }
+        args->iterators_mutex.unlock();
+
+        if (not_over) count_words(arch, map);
+    }
+
+    return nullptr;
+}
+
 void *ConcurrentHashMap::count_words_single_file_thread_function(void *thread_args) {
     struct count_words_thread_args *args;
     args = (struct count_words_thread_args *) thread_args;
@@ -259,4 +308,22 @@ void ConcurrentHashMap::create_and_join_threads(unsigned int n, void *thread_fun
             exit(-1);
         }
     }
+}
+
+void ConcurrentHashMap::addAndSum(item current_item) {
+    unsigned int index = hash_key(&current_item.first);
+
+    tabla_mutex->lock();
+    bucket_mutex[index]->lock();
+
+    // Busco la clave
+    bucket::Iterador it = tabla[index]->CrearIt();
+    while (it.HaySiguiente() && it.Siguiente().first != current_item.first) it.Avanzar();
+
+    // Si la encuentro, incremento la cuenta. Si no, la inicializo en el valor del item.
+    if (it.HaySiguiente()) it.Siguiente().second+=current_item.second;
+    else tabla[index]->push_front(item(current_item.first, current_item.second));
+
+    bucket_mutex[index]->unlock();
+    tabla_mutex->unlock();
 }

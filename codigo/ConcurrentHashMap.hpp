@@ -34,13 +34,23 @@ private:
         mutex archs_iterator_mutex;
     };
 
+    struct maximum_count_words_thread_args {
+        list<ConcurrentHashMap*>::iterator maps_iterator;
+        list<string>::iterator archs_iterator;
+        list<string>::iterator archs_iterator_end;
+        mutex iterators_mutex;
+    };
+
     static unsigned int hash_key(string *key);
     static list<string> words(string &arch);
     static void *maximum_thread_function(void *thread_args);
+    static void *maximum_count_words_thread_function(void *thread_args);
     static void *count_words_thread_function(void *thread_args);
     static void *count_words_single_file_thread_function(void *thread_args);
     static void count_words(string arch, ConcurrentHashMap *map);
     static void create_and_join_threads(unsigned int n, void *thread_function(void*), void *thread_args);
+
+    void addAndSum(item current_item);
 
 public:
     bucket* tabla[NUM_BUCKETS];
