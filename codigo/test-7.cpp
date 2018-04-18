@@ -35,12 +35,16 @@ int main(int argc, char const *argv[]) {
 	unsigned int p_maximos = stoi(argv[2]);
 
 	timespec start1 = gettime();
-	ConcurrentHashMap::maximum(p_archivos, p_maximos, archs);
-	cout << timediff(start1, gettime()) << ",";
+	item max1 = ConcurrentHashMap::maximum(p_archivos, p_maximos, archs);
+	timespec end1 = gettime();
 
 	timespec start2 = gettime();
-	ConcurrentHashMap::maximum2(p_archivos, p_maximos, archs);
-	cout << timediff(start2, gettime()) << endl;
+	item max2 = ConcurrentHashMap::maximum2(p_archivos, p_maximos, archs);
+	timespec end2 = gettime();
+
+	assert(max1.second == max2.second);
+
+	cout << timediff(start1, end1) << "," << timediff(start2, end2) << endl;
 
 	return 0;
 }
