@@ -79,12 +79,12 @@ int main(int argc, char const *argv[]) {
 	auto max = ConcurrentHashMap::maximum(MAX_NUM_THREADS, MAX_NUM_THREADS, archs);
 
 	for (unsigned int i = 0; i < NUM_THREADS; ++i) {
-		assert(max == maps[i]->maximum(1));
+		assert(max.second == maps[i]->maximum(1).second);
 		archs2.push_back("corpus");
 		delete(maps[i]);
 	}
 
-	assert(ConcurrentHashMap::maximum(MAX_NUM_THREADS, MAX_NUM_THREADS, archs2) == map->maximum(1));
+	assert(ConcurrentHashMap::maximum(MAX_NUM_THREADS, MAX_NUM_THREADS, archs2).second == map->maximum(1).second);
 	delete(map);
 
 	return 0;
