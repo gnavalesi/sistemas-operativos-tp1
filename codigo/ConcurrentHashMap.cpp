@@ -191,11 +191,9 @@ void *ConcurrentHashMap::maximum_thread_function(void *thread_args) {
 
     // Obtengo el indice de un bucket y guardo el maximo local
     for (index = args->index++; index < NUM_BUCKETS; index = args->index++) {
-        args->map->bucket_mutex[index]->lock();
         for (auto it = args->map->tabla[index]->CrearIt(); it.HaySiguiente(); it.Avanzar()) {
         	if (it.Siguiente().second > maximum.second) maximum = it.Siguiente();
         }
-        args->map->bucket_mutex[index]->unlock();
     }
 
     // Actualizo el maximo global si encontre un maximo local
@@ -311,9 +309,6 @@ void ConcurrentHashMap::create_and_join_threads(unsigned int n, void *thread_fun
 void ConcurrentHashMap::addAndSum(item current_item) {
     unsigned int index = hash_key(&current_item.first);
 
-    tabla_mutex->lock();
-    bucket_mutex[index]->lock();
-
     // Busco la clave
     bucket::Iterador it = tabla[index]->CrearIt();
     while (it.HaySiguiente() && it.Siguiente().first != current_item.first) it.Avanzar();
@@ -321,7 +316,4 @@ void ConcurrentHashMap::addAndSum(item current_item) {
     // Si la encuentro, incremento la cuenta. Si no, la inicializo en el valor del item.
     if (it.HaySiguiente()) it.Siguiente().second += current_item.second;
     else tabla[index]->push_front(item(current_item.first, current_item.second));
-
-    bucket_mutex[index]->unlock();
-    tabla_mutex->unlock();
 }
