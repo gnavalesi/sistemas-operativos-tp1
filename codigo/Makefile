@@ -4,14 +4,14 @@
 
 CXX = g++
 CXXFLAGS = -std=c++11 -Wall
-LDLIBS = -lpthread
+LDLIBS = -lpthread -lrt
 
 .cpp.o:
 	$(CXX) $(CXXFLAGS) -c $<
 
-BIN = test-1 test-2 test-3 test-4 test-5 test-6
+BIN = test-1 test-2 test-3 test-4 test-5 test-6 test-7
 OBJ = ConcurrentHashMap.o
-RUN = test-1-run test-2-run test-3-run test-4-run test-5-run test-6-run
+RUN = test-1-run test-2-run test-3-run test-4-run test-5-run test-6-run  test-7-run
 
 all: $(BIN)
 
@@ -66,6 +66,15 @@ test-6: $(OBJ) test-6.cpp
 test-6-run: test-6
 	for i in 0 1 2 3 4; do sed -n "$$((i * 500 + 1)),$$(((i + 1) * 500))p" corpus >corpus-"$$i"; done
 	./test-6
+	rm -f corpus-[0-4]
+
+test-7: $(OBJ) test-7.cpp
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test-7.cpp $(OBJ) $(LDLIBS)
+
+test-7-run: test-7
+	for i in 0 1 2 3 4; do sed -n "$$((i * 500 + 1)),$$(((i + 1) * 500))p" corpus >corpus-"$$i"; done
+	echo "p_archivos,p_maximos,maximum_time,maximum2_time" > test-7.csv
+	for i in $$(seq 1 10); do for j in $$(seq 1 10); do echo -n "$$i,$$j,"; ./test-7 $$i $$j; done; done >> test-7.csv
 	rm -f corpus-[0-4]
 
 clean:
