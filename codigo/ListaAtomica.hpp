@@ -28,7 +28,8 @@ public:
 
 	void push_front(const T& val) {
 		auto newHead = new Nodo(val);
-		newHead->_next = _head.exchange(newHead);
+		newHead->_next = _head;
+		while (!_head.compare_exchange_weak(newHead->_next, newHead));
 	}
 
 	T& front() const {
