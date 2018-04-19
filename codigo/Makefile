@@ -77,6 +77,12 @@ test-7-run: test-7
 	for i in $$(seq 1 5); do for j in $$(seq 1 5); do echo -n "$$i,$$j,"; ./test-7 1000 $$i $$j; done; done >> test-7.csv
 	rm -f corpus-*
 
+test-8: $(OBJ) test-8.cpp
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test-8.cpp $(OBJ) $(LDLIBS)
+
+test-8-run: test-8
+	./test-8 100000
+
 clean:
 	rm -f $(BIN) $(OBJ)
 	rm -f corpus-*
