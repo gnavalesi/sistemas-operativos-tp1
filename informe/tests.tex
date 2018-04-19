@@ -31,3 +31,23 @@ En la figura \ref{fig:test_tiempos} se puede ver efectivamente que el tiempo de 
 \caption{Tiempo de \texttt{maximum} relativo al tiempo de \texttt{maximum2}}
 \label{fig:test_tiempos}
 \end{figure}
+
+
+\subsection{test-8}
+
+El test \texttt{test-8} tiene el objetivo de verificar si la función \mintinline{c++}{void addAndInc(string key)} implementa correctamente el mecanismo de locking que debería hacer exclusión mutua en caso de colisión únicamente.
+
+Para hacer esto se crean dos listas de palabras de igual tamaño, cada una con una misma palabra repetida, pero que palabras de distintas las listas correspondan a buckets distintos (por ejemplo una lista \textless arbol, arbol, ..., arbol\textgreater\ y otra \textless bolso, bolso, ..., bolso\textgreater ). La razón por la cual se repite la misma palabra es que garantiza que \texttt{addAndInc} tenga un tiempo de ejecución constante.
+
+Primero se crean dos threads que agregan la \emph{misma} la lista \emph{cada uno} a un \texttt{ConcurrentHashMap} y se mide el tiempo que demoran. Luego se crean otros dos threads que agregan cada uno una lista \emph{distinta} a un \texttt{ConcurrentHashMap} y se mide el tiempo que tarda. La idea es que cuando los dos threads agregan una misma lista el locking forzará un agregado secuencial; mientras que cuando agregan listas distintas los dos threads pueden agregar palabras concurrentemente ya que no hay colisión entre threads. Luego, los threads que agregan la misma lista deberían tardar mucho más.
+
+Corriendo este test con listas de 100.000 palabras se obtuvo que los threads que agregan listas distintas demoran entre el 30\% y 34\% de lo que tardan los threads que agregan la misma lista. Esto confirma entonces que la implementación del locking es correcta.
+
+
+\subsection{test-9}
+
+Este test verifica que \mintinline{c++}{void addAndInc(string key)} y \mintinline{c++}{item maximum(unsigned int nt)} no sean concurrentes. Primero se carga un \texttt{ConcurrentHashMap} con palabras y se mide el tiempo que se tarda en llamar secuencialmente addAndInc y maximum una cierta cantidad de veces. Luego, se carga otro mapa con las mismas palabras y se mide el tiempo que se tarda en hacer lo mismo pero esta vez con dos threads, uno que llama a addAndInc y otro a maximum, la misma cantidad de veces. Se espera que los tiempos obtenidos sean aproximadamente el mismo.
+
+El test dio como resultado que la ejecución con threads tarda entre 2\% y 5\% más que la ejecución secuencial. Este pequeño incremento puede atribuirse al overhead que conlleva el uso de threads. Con esto se comprueba entonces que las dos funciones no son concurrentes.
+
+
