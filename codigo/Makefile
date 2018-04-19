@@ -9,9 +9,9 @@ LDLIBS = -lpthread -lrt
 .cpp.o:
 	$(CXX) $(CXXFLAGS) -c $<
 
-BIN = test-1 test-2 test-3 test-4 test-5 test-6 test-7
+BIN = test-1 test-2 test-3 test-4 test-5 test-6 test-7 test-8 test-9
 OBJ = ConcurrentHashMap.o
-RUN = test-1-run test-2-run test-3-run test-4-run test-5-run test-6-run  test-7-run
+RUN = test-1-run test-2-run test-3-run test-4-run test-5-run test-6-run test-7-run test-8-run test-9-run
 
 all: $(BIN)
 
@@ -82,6 +82,12 @@ test-8: $(OBJ) test-8.cpp
 
 test-8-run: test-8
 	./test-8 100000
+
+test-9: $(OBJ) test-9.cpp
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ test-9.cpp $(OBJ) $(LDLIBS)
+
+test-9-run: test-9
+	./test-9 10000
 
 clean:
 	rm -f $(BIN) $(OBJ)
